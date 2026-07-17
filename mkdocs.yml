@@ -1,0 +1,57 @@
+site_name: ModexAgent
+site_description: A modular, composable, production-ready Python Agent framework.
+site_url: https://moyu-er.github.io/modex-agent/
+repo_url: https://github.com/moyu-er/ModexAgent
+repo_name: moyu-er/ModexAgent
+copyright: Copyright &copy; 2026 ModexAgent · MIT License
+
+docs_dir: docs
+# Local working docs (spec/tickets) live in docs/design — never built into the site
+exclude_docs: design/**
+
+theme:
+  name: material
+  custom_dir: overrides
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    # NOTE: navigation.instant intentionally NOT enabled — it breaks
+    # third-party JS init (particle engine) on page transitions.
+
+plugins:
+  - search:
+      lang: en
+  - i18n:
+      docs_structure: suffix
+      languages:
+        - locale: en
+          name: English
+          build: true
+          default: true
+
+nav:
+  - Home: index.md
+
+markdown_extensions:
+  - admonition
+    #  - tables   # builtin in mkdocs
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+
+extra_css:
+  - stylesheets/extra.css
