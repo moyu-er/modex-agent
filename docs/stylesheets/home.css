@@ -1,0 +1,569 @@
+/* ==========================================================================
+   ModexAgent — landing page styles (T3 · Variant A "Centered Stage")
+
+   Consumes ONLY the --mdx-* design tokens defined in extra.css (Teal &
+   Ember, per scheme) — every glow/shadow/gradient below is a color-mix()
+   derivation from those tokens, never a hardcoded palette value.
+
+   This file is registered site-wide via extra_css, so EVERY rule is scoped
+   to the landing: either under .mdx-home, or to its ancestors via :has().
+   Docs pages are untouched.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   De-scope the docs grid: the landing lives inside .md-main__inner (a
+   61rem-capped flex row). When it directly contains .mdx-home, flatten it.
+   -------------------------------------------------------------------------- */
+.md-main__inner:has(> .mdx-home) {
+  display: block;
+  height: auto;
+  margin: 0;
+  max-width: none;
+}
+
+/* --------------------------------------------------------------------------
+   Scheme-derived helper tokens (per palette scheme, from --mdx-* only)
+   -------------------------------------------------------------------------- */
+[data-md-color-scheme="default"] .mdx-home {
+  /* DAY — deepened accents on warm paper */
+  --mdx-home-brand-ink: color-mix(in srgb, var(--mdx-brand) 72%, var(--mdx-text)); /* ≥4.5:1 small-text teal */
+  --mdx-home-glow: color-mix(in srgb, var(--mdx-brand) 12%, transparent);
+  --mdx-home-shadow: 0 1.125rem 3.125rem color-mix(in srgb, var(--mdx-text) 10%, transparent);
+  --mdx-home-btn-bg: linear-gradient(120deg, var(--mdx-brand-bright), color-mix(in srgb, var(--mdx-brand-bright) 55%, var(--mdx-brand)));
+  --mdx-home-btn-fg: var(--mdx-text);
+  --mdx-home-stage: radial-gradient(closest-side, color-mix(in srgb, var(--mdx-brand) 7%, transparent), transparent 72%);
+}
+
+[data-md-color-scheme="slate"] .mdx-home {
+  /* NIGHT — glowing teal on warm graphite */
+  --mdx-home-brand-ink: var(--mdx-brand);
+  --mdx-home-glow: color-mix(in srgb, var(--mdx-brand) 18%, transparent);
+  --mdx-home-shadow: 0 1.125rem 3.125rem color-mix(in srgb, var(--mdx-bg) 65%, transparent);
+  --mdx-home-btn-bg: linear-gradient(120deg, var(--mdx-brand), var(--mdx-brand-bright));
+  --mdx-home-btn-fg: var(--mdx-bg);
+  --mdx-home-stage: radial-gradient(closest-side, color-mix(in srgb, var(--mdx-brand) 10%, transparent), transparent 72%);
+}
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+.mdx-home {
+  overflow-x: clip;
+  color: var(--mdx-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.mdx-home h1,
+.mdx-home h2,
+.mdx-home h3 {
+  font-family: var(--mdx-font-display);
+  margin: 0;
+}
+
+.mdx-home p {
+  margin: 0;
+}
+
+.mdx-home section[id] {
+  scroll-margin-top: 5rem;
+}
+
+.mdx-accent {
+  color: var(--mdx-brand);
+}
+
+/* --------------------------------------------------------------------------
+   Hero — full-viewport-minus-chrome centered stage.
+   Material chrome = 2.4rem header + 2.4rem nav tabs (tabs hide <76.234375em).
+   -------------------------------------------------------------------------- */
+.mdx-hero {
+  position: relative;
+  display: flex;
+  min-height: calc(100vh - 4.8rem);
+  min-height: calc(100svh - 4.8rem);
+  overflow: hidden;
+}
+
+@media (max-width: 76.234375em) {
+  .mdx-hero {
+    min-height: calc(100vh - 2.4rem);
+    min-height: calc(100svh - 2.4rem);
+  }
+}
+
+/* T4 replaces this interim stage glow with the particle engine */
+.mdx-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--mdx-home-stage);
+  pointer-events: none;
+}
+
+.mdx-hero #pcv {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.mdx-shape-label {
+  position: absolute;
+  top: clamp(3.5rem, 12vh, 7rem);
+  right: 5vw;
+  z-index: 2;
+  font-family: var(--md-code-font-family);
+  font-size: .72rem;
+  letter-spacing: .28em;
+  color: var(--mdx-text-dim);
+  padding: .375rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--mdx-border);
+  background: var(--mdx-surface);
+  transition: opacity .5s ease-out;
+}
+
+.mdx-hero__inner {
+  position: relative;
+  z-index: 2;
+  margin: auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  max-width: 56rem;
+  padding: clamp(9rem, 38vh, 24rem) 5vw 4rem;
+}
+
+.mdx-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .375rem .9375rem;
+  border-radius: 999px;
+  border: 1px solid var(--mdx-border);
+  background: var(--mdx-surface);
+  font-size: .78rem;
+  color: var(--mdx-text-dim);
+  letter-spacing: .06em;
+}
+
+.mdx-kicker__dot {
+  width: .4375rem;
+  height: .4375rem;
+  border-radius: 50%;
+  background: var(--mdx-brand);
+  box-shadow: 0 0 .625rem var(--mdx-brand);
+}
+
+.mdx-hero__title {
+  font-size: clamp(2rem, 4.4vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.16;
+  letter-spacing: -.01em;
+}
+
+.mdx-hero__sub {
+  color: var(--mdx-text-dim);
+  font-size: clamp(.95rem, 1.4vw, 1.08rem);
+  line-height: 1.85;
+  max-width: 37.5rem;
+}
+
+/* ---------- CTAs + badges ---------- */
+.mdx-cta-row {
+  display: flex;
+  gap: .875rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.mdx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  min-height: 2.75rem; /* 44px touch target */
+  padding: .8125rem 1.75rem;
+  border-radius: .75rem;
+  border: 1px solid transparent;
+  font-size: .95rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform .25s ease-out, box-shadow .25s ease-out,
+              border-color .25s ease-out, background-color .25s ease-out,
+              color .25s ease-out;
+}
+
+.mdx-btn svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+}
+
+.mdx-btn--primary {
+  color: var(--mdx-home-btn-fg);
+  background: var(--mdx-home-btn-bg);
+  box-shadow: 0 .5rem 1.75rem var(--mdx-home-glow);
+}
+
+.mdx-btn--primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 .8rem 2.25rem var(--mdx-home-glow);
+}
+
+.mdx-btn--ghost {
+  color: var(--mdx-text);
+  border-color: var(--mdx-border);
+  background: var(--mdx-surface);
+}
+
+.mdx-btn--ghost:hover {
+  border-color: var(--mdx-brand);
+  transform: translateY(-3px);
+  box-shadow: var(--mdx-home-shadow);
+}
+
+.mdx-btn:focus-visible {
+  outline: 2px solid var(--mdx-brand);
+  outline-offset: 3px;
+}
+
+.mdx-badges {
+  display: flex;
+  gap: .625rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.mdx-badge {
+  font-family: var(--md-code-font-family);
+  font-size: .72rem;
+  padding: .375rem .8125rem;
+  border-radius: .5rem;
+  background: var(--mdx-surface);
+  border: 1px solid var(--mdx-border);
+  color: var(--mdx-text-dim);
+}
+
+.mdx-badge b {
+  color: var(--mdx-ember);
+  font-weight: 600;
+}
+
+.mdx-scroll-hint {
+  position: absolute;
+  bottom: 1.375rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  color: var(--mdx-text-dim);
+  font-family: var(--md-code-font-family);
+  font-size: .64rem;
+  letter-spacing: .3em;
+  animation: mdx-scroll-drift 2.4s ease-in-out infinite;
+}
+
+@keyframes mdx-scroll-drift {
+  0%, 100% { transform: translate(-50%, 0); }
+  50%      { transform: translate(-50%, .375rem); }
+}
+
+/* --------------------------------------------------------------------------
+   Sections — centered Variant-A rhythm
+   -------------------------------------------------------------------------- */
+.mdx-section {
+  padding: clamp(3.5rem, 8vw, 6rem) 5vw;
+  max-width: 76.25rem;
+  margin: 0 auto;
+}
+
+.mdx-sec-head {
+  text-align: center;
+  margin-bottom: 3.25rem;
+}
+
+.mdx-sec-tag {
+  font-family: var(--md-code-font-family);
+  font-size: .74rem;
+  letter-spacing: .3em;
+  color: var(--mdx-home-brand-ink);
+  text-transform: uppercase;
+}
+
+.mdx-sec-title {
+  font-size: clamp(1.6rem, 3vw, 2.3rem);
+  font-weight: 700;
+  margin-top: .75rem;
+}
+
+.mdx-sec-desc {
+  color: var(--mdx-text-dim);
+  margin: .875rem auto 0;
+  max-width: 38.75rem;
+  line-height: 1.85;
+  font-size: .95rem;
+}
+
+.mdx-section__cta {
+  margin-top: 1.75rem;
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   Feature cards
+   -------------------------------------------------------------------------- */
+.mdx-feat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(16.875rem, 100%), 1fr));
+  gap: 1.125rem;
+}
+
+.mdx-card {
+  background: var(--mdx-surface);
+  border: 1px solid var(--mdx-border);
+  border-radius: 1.125rem;
+  padding: 1.625rem;
+  transition: transform .3s ease-out, border-color .3s ease-out,
+              box-shadow .3s ease-out;
+}
+
+.mdx-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--mdx-brand);
+  box-shadow: var(--mdx-home-shadow), 0 0 1.5rem var(--mdx-home-glow);
+}
+
+.mdx-card__icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: .75rem;
+  display: grid;
+  place-items: center;
+  background: var(--mdx-surface-2);
+  border: 1px solid var(--mdx-border);
+  color: var(--mdx-brand);
+  margin-bottom: 1rem;
+}
+
+.mdx-card__icon svg {
+  width: 1.3125rem;
+  height: 1.3125rem;
+}
+
+.mdx-card__title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: .5625rem;
+}
+
+.mdx-card__desc {
+  color: var(--mdx-text-dim);
+  font-size: .85rem;
+  line-height: 1.8;
+}
+
+/* --------------------------------------------------------------------------
+   Architecture strip — mono chips flowing downward
+   -------------------------------------------------------------------------- */
+.mdx-arch-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .75rem;
+}
+
+.mdx-arch-row {
+  display: flex;
+  gap: .75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.mdx-arch-chip {
+  font-family: var(--md-code-font-family);
+  font-size: .74rem;
+  padding: .625rem 1rem;
+  border-radius: .6875rem;
+  background: var(--mdx-surface);
+  border: 1px solid var(--mdx-border);
+  color: var(--mdx-text);
+}
+
+.mdx-arch-chip--hot {
+  border-color: var(--mdx-brand);
+  color: var(--mdx-home-brand-ink);
+}
+
+.mdx-arch-arrow {
+  width: 1rem;
+  height: 1rem;
+  color: var(--mdx-text-dim);
+}
+
+/* --------------------------------------------------------------------------
+   Get Started steps (installer-first)
+   -------------------------------------------------------------------------- */
+.mdx-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(16.25rem, 100%), 1fr));
+  gap: 1.125rem;
+}
+
+.mdx-step {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background: var(--mdx-surface);
+  border: 1px solid var(--mdx-border);
+  transition: transform .3s ease-out, border-color .3s ease-out,
+              box-shadow .3s ease-out;
+}
+
+.mdx-step:hover {
+  border-color: var(--mdx-brand);
+  transform: translateY(-4px);
+  box-shadow: var(--mdx-home-shadow);
+}
+
+.mdx-step__num {
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: .625rem;
+  display: grid;
+  place-items: center;
+  font-family: var(--md-code-font-family);
+  font-weight: 600;
+  font-size: .85rem;
+  color: var(--mdx-home-btn-fg);
+  background: var(--mdx-home-btn-bg);
+}
+
+.mdx-step__title {
+  font-size: .93rem;
+  margin-bottom: .3125rem;
+}
+
+.mdx-step__desc {
+  color: var(--mdx-text-dim);
+  font-size: .83rem;
+  line-height: 1.75;
+}
+
+/* --------------------------------------------------------------------------
+   Extras chips
+   -------------------------------------------------------------------------- */
+.mdx-chips {
+  display: flex;
+  gap: .75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.mdx-chip {
+  font-family: var(--md-code-font-family);
+  font-size: .72rem;
+  padding: .4375rem .875rem;
+  border-radius: 999px;
+  background: var(--mdx-surface);
+  border: 1px solid var(--mdx-border);
+  color: var(--mdx-text-dim);
+}
+
+/* --------------------------------------------------------------------------
+   Final CTA band (sits directly above the Material footer)
+   -------------------------------------------------------------------------- */
+.mdx-final {
+  text-align: center;
+  padding: clamp(4rem, 10vw, 6.875rem) 5vw;
+  background: var(--mdx-surface-2);
+  border-top: 1px solid var(--mdx-border);
+}
+
+.mdx-final__title {
+  font-size: clamp(1.7rem, 3.4vw, 2.5rem);
+  font-weight: 700;
+}
+
+.mdx-final__sub {
+  color: var(--mdx-text-dim);
+  margin: 1rem auto 1.875rem;
+  max-width: 32.5rem;
+  line-height: 1.85;
+}
+
+/* --------------------------------------------------------------------------
+   Scroll reveal — entrance transition with 50ms sibling stagger.
+   Without JS/IO the inline script force-adds .in; with reduced motion the
+   guard below shows everything instantly.
+   -------------------------------------------------------------------------- */
+.mdx-home .reveal {
+  opacity: 0;
+  transform: translateY(1.875rem);
+  transition: opacity .7s cubic-bezier(.2, .7, .2, 1),
+              transform .7s cubic-bezier(.2, .7, .2, 1);
+}
+
+.mdx-home .reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+.mdx-feat-grid .reveal:nth-child(2),
+.mdx-steps .reveal:nth-child(2) { transition-delay: .05s; }
+
+.mdx-feat-grid .reveal:nth-child(3),
+.mdx-steps .reveal:nth-child(3) { transition-delay: .1s; }
+
+.mdx-feat-grid .reveal:nth-child(4) { transition-delay: .15s; }
+
+.mdx-feat-grid .reveal:nth-child(5) { transition-delay: .2s; }
+
+.mdx-feat-grid .reveal:nth-child(6) { transition-delay: .25s; }
+
+/* --------------------------------------------------------------------------
+   Responsive — 375px: stacked CTAs (full-width, ≥44px), centered shape
+   label, no horizontal scroll (grids already collapse to one column).
+   -------------------------------------------------------------------------- */
+@media (max-width: 35em) {
+  .mdx-cta-row {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .mdx-cta-row .mdx-btn {
+    width: 100%;
+  }
+
+  .mdx-shape-label {
+    right: 50%;
+    transform: translateX(50%);
+    top: 4.5rem;
+    letter-spacing: .2em;
+    white-space: nowrap;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion — every animation/transition above is neutralized here;
+   reveals render instantly visible.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .mdx-home *,
+  .mdx-home *::before,
+  .mdx-home *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+
+  .mdx-home .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

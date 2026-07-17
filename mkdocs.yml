@@ -49,6 +49,12 @@ plugins:
 
 nav:
   - Home: index.md
+  - Installation: installation.md
+  - Get Started: get-started.md
+  - Concepts:
+      - Graph Engine: concepts/graph-engine.md
+      - Multi-Agent: concepts/multi-agent.md
+      - Memory: concepts/memory.md
 
 markdown_extensions:
   - admonition
@@ -60,3 +66,4 @@ markdown_extensions:
 
 extra_css:
   - stylesheets/extra.css
+  - stylesheets/home.css
