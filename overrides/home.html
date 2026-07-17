@@ -21,7 +21,7 @@
 {# Restore Material's skip link on the landing — `hide: toc` suppresses the
    built-in one. Material's own translation key keeps the zero-literal rule. #}
 {% block skip %}
-<a href="#hero" class="md-skip">{{ "skip.link.title" | t }}</a>
+<a href="#hero" class="md-skip">{{ home.a11y.skip }}</a>
 {% endblock %}
 
 {% block container %}

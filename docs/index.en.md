@@ -20,6 +20,10 @@ hide:
 #   hot  — highlights the pipeline core chip in the architecture strip.
 # ==========================================================================
 home:
+  # ---- Accessibility strings ---------------------------------------------
+  a11y:
+    skip: "Skip to content"
+
   # ---- Hero (Variant A, centered stage) ---------------------------------
   hero:
     shape_label: "MODEX · AGENT"
