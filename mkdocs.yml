@@ -6,8 +6,10 @@ repo_name: moyu-er/ModexAgent
 copyright: Copyright &copy; 2026 ModexAgent · MIT License
 
 docs_dir: docs
-# Local working docs (spec/tickets) live in docs/design — never built into the site
-exclude_docs: design/**
+# Local working docs (spec/tickets/handoff) — never built into the site
+exclude_docs: |
+  design/**
+  handoff/**
 
 theme:
   name: material
