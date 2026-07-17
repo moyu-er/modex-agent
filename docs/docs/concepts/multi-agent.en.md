@@ -69,4 +69,4 @@ I/O adapters are fully decoupled from agent logic. The WebUI, CLI, and IM platfo
 
 - ReAct subagents in a pool run the [Graph Engine](graph-engine.md) runtime, so they can suspend for approval too. External coding agent main agents (Pi / OpenCode) run their own CLI harness and do not use the graph.
 - What each agent remembers is governed by the [Memory](memory.md) tiers.
-- Set up your first bot in [Installation](../installation.md) or [Get Started](../get-started.md).
+- Set up your first bot in [Installation](../../installation.md) or [Get Started](../../get-started.md).

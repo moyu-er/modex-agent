@@ -70,6 +70,6 @@ On Windows, uninstall via **Add/Remove Programs**. Your config files (API keys, 
 ## Next steps
 
 - [Get Started](get-started.md): first launch, API key setup, and a WebUI tour.
-- [Graph Engine](concepts/graph-engine.md): the execution model under the hood.
-- [Multi-Agent](concepts/multi-agent.md): pools, subagents, and peer messaging.
-- [Memory](concepts/memory.md): how the bot remembers across sessions.
+- [Graph Engine](docs/concepts/graph-engine.md): the execution model under the hood.
+- [Multi-Agent](docs/concepts/multi-agent.md): pools, subagents, and peer messaging.
+- [Memory](docs/concepts/memory.md): how the bot remembers across sessions.

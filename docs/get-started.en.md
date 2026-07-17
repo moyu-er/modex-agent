@@ -52,6 +52,6 @@ From there, try something that uses tools, for example asking the bot to look at
 
 ## What to explore next
 
-- [Graph Engine](concepts/graph-engine.md): how the graph-driven ReAct engine runs, suspends, and resumes.
-- [Multi-Agent](concepts/multi-agent.md): pools, star-topology subagents, and cross-pool peer messaging.
-- [Memory](concepts/memory.md): the multi-tier memory system and self-learning experience loop.
+- [Graph Engine](docs/concepts/graph-engine.md): how the graph-driven ReAct engine runs, suspends, and resumes.
+- [Multi-Agent](docs/concepts/multi-agent.md): pools, star-topology subagents, and cross-pool peer messaging.
+- [Memory](docs/concepts/memory.md): the multi-tier memory system and self-learning experience loop.

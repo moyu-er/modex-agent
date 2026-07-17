@@ -53,10 +53,11 @@ nav:
   - Home: index.md
   - Installation: installation.md
   - Get Started: get-started.md
-  - Concepts:
-      - Graph Engine: concepts/graph-engine.md
-      - Multi-Agent: concepts/multi-agent.md
-      - Memory: concepts/memory.md
+  - Docs:
+      - Concepts:
+          - Graph Engine: docs/concepts/graph-engine.md
+          - Multi-Agent: docs/concepts/multi-agent.md
+          - Memory: docs/concepts/memory.md
 
 markdown_extensions:
   - admonition

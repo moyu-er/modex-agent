@@ -17,7 +17,8 @@ modex-agent/
 ├── docs/                   # MkDocs content tree (the built site)
 │   ├── index.en.md         # landing — ALL homepage copy lives in its `home:` frontmatter
 │   ├── *.en.md             # docs pages (suffix i18n; en default, zh-ready)
-│   ├── concepts/           # concept deep-dives
+│   ├── docs/               # "Docs" nav section content root
+│   │   └── concepts/       # concept deep-dives (Concepts sub-block)
 │   ├── stylesheets/        # extra.css (design tokens) + home.css (landing-only)
 │   ├── javascripts/        # particles.js (particle morph engine)
 │   ├── assets/brand/       # logos copied from source repo (no cross-repo runtime dep)
@@ -105,9 +106,11 @@ the matching SVG branch in `home.html`.
 ## NAV
 
 `nav:` in `mkdocs.yml` uses unsuffixed logical names (e.g. `index.md`,
-`concepts/graph-engine.md`). The i18n plugin resolves the `.en` suffix. Add a
-new page: create `docs/<name>.en.md` → add `nav:` entry → link from other pages
-with unsuffixed relative links (`[x](../<name>.md)`).
+`docs/concepts/graph-engine.md`). Paths are relative to `docs_dir: docs`; the
+i18n plugin resolves the `.en` suffix. The **Docs** section holds all
+concept/deep-dive content; **Concepts** lives at `docs/docs/concepts/`. Add a
+new Docs page: create `docs/docs/<name>.en.md` → add a `nav:` entry under
+`Docs:` → link from other pages with unsuffixed relative links.
 
 ## COMMANDS
 

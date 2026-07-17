@@ -49,4 +49,4 @@ Subagents run leaner. `archive=None` is the standard session-only mode: a subage
 
 - Memory feeds the LLM node of the [Graph Engine](graph-engine.md) on every pass.
 - Subagent isolation is part of the [Multi-Agent](multi-agent.md) star topology.
-- See memory in action by running the bot in [Get Started](../get-started.md).
+- See memory in action by running the bot in [Get Started](../../get-started.md).

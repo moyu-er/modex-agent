@@ -123,4 +123,4 @@ what happened, instead of a surprise bill.
   runtime, so they can suspend for approval too. External coding agent pools
   (Pi / OpenCode) do not.
 - What the LLM node sees each pass is shaped by the [Memory](memory.md) tiers.
-- Ready to run an agent? Head to [Get Started](../get-started.md).
+- Ready to run an agent? Head to [Get Started](../../get-started.md).
