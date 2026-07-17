@@ -27,6 +27,36 @@ Two safeguards keep the star healthy:
 
 Stars don't connect to each other through their spokes. Instead, **main agents communicate as peers**: a main agent can `send_to_agent` another pool's main agent, which receives the message on its own bus and replies in kind. Pools stay autonomous, yet a system of pools can still divide labor.
 
+```mermaid
+flowchart LR
+    subgraph PA["Pool A — react"]
+        direction LR
+        MA1["Main Agent"]
+        SA1["Subagent"]
+        SA2["Subagent"]
+        MA1 ---|send_to_agent| SA1
+        MA1 ---|send_to_agent| SA2
+    end
+    subgraph PB["Pool B — react"]
+        direction LR
+        MA2["Main Agent"]
+        SA3["Subagent"]
+        MA2 ---|send_to_agent| SA3
+    end
+    subgraph PC["Pool C — external_coding"]
+        MA3["Main Agent<br/><small>(Pi / OpenCode CLI)</small>"]
+    end
+
+    MA1 <-->|peer| MA2
+    MA1 <-->|peer| MA3
+    MA2 <-->|peer| MA3
+```
+
+Inside each react pool the topology is a strict star: one main agent as hub,
+subagents as spokes, all routed through the single `send_to_agent` tool. Across
+pools, main agents talk as peers — including the main agent of an
+external_coding pool, which has no subagents and no graph runtime of its own.
+
 ## External coding agents as peers
 
 External coding agents such as **Pi** and **OpenCode** join the same peer topology as NORMAL main agents of their own dedicated pools (`pool_pi`, `pool_opencode`). They don't have the `send_to_agent` tool, so they reply through a CLI shim the framework ships for this purpose: `modexctl send` (part of the `modexbot`/`modexctl` facade). The shim delivers an XML-wrapped `<agent_message>` straight into the target workspace's inbox. Every other agent reaches them with the standard `send_to_agent` tool, so from the framework's point of view they are ordinary pool mains.
@@ -37,6 +67,6 @@ I/O adapters are fully decoupled from agent logic. The WebUI, CLI, and IM platfo
 
 ## Where to next
 
-- Every agent in a pool runs the [Graph Engine](graph-engine.md) runtime, so subagents can suspend for approval too.
+- ReAct subagents in a pool run the [Graph Engine](graph-engine.md) runtime, so they can suspend for approval too. External coding agent main agents (Pi / OpenCode) run their own CLI harness and do not use the graph.
 - What each agent remembers is governed by the [Memory](memory.md) tiers.
 - Set up your first bot in [Installation](../installation.md) or [Get Started](../get-started.md).
