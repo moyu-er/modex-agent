@@ -18,10 +18,13 @@
 {# Landing renders no sidebars (frontmatter `hide` covers it as well) #}
 {% block site_nav %}{% endblock %}
 
-{# Restore Material's skip link on the landing — `hide: toc` suppresses the
-   built-in one. Material's own translation key keeps the zero-literal rule. #}
-{% block skip %}
-<a href="#hero" class="md-skip">{{ home.a11y.skip }}</a>
+{# Restore the skip link on the landing — Material renders it only from
+   page.toc, which the landing lacks, and base.html has no `skip` block to
+   override. So prepend it inside the `header` block: first focusable
+   element wins. Text via lang.t = Material's native translation. #}
+{% block header %}
+<a href="#hero" class="md-skip">{{ lang.t("action.skip") }}</a>
+{{ super() }}
 {% endblock %}
 
 {% block container %}
