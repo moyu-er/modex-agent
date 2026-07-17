@@ -24,5 +24,7 @@ Thumbs.db
 
 # Local design working docs (never committed/built)
 docs/design/
+# Local handoff docs (time-sensitive, never committed/built)
+docs/handoff/
 # Throwaway UI prototype
 prototype/
