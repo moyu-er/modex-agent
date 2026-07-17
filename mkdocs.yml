@@ -58,6 +58,7 @@ nav:
           - Graph Engine: docs/concepts/graph-engine.md
           - Multi-Agent: docs/concepts/multi-agent.md
           - Memory: docs/concepts/memory.md
+          - Runtime Layers: docs/concepts/runtime-layers.md
 
 markdown_extensions:
   - admonition

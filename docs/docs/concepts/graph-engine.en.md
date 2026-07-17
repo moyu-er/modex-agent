@@ -117,6 +117,12 @@ propagates *around* the graph — straight to the agent's exit handler — inste
 of becoming another edge. You get a clean termination and a chance to inspect
 what happened, instead of a surprise bill.
 
+`AgentControlError` is part of the framework's control plane — the same
+exception family that `/stop` and the WebUI pause button raise. See
+[Runtime Layers](runtime-layers.md) for how Hook, Interceptor, and Control
+compose, and how loop detection fits in as a hook that raises a control
+exception.
+
 ## Where to next
 
 - ReAct subagents in [Multi-Agent](multi-agent.md) pools run the same graph
