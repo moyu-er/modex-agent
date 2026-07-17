@@ -23,6 +23,12 @@ home:
   # ---- Hero (Variant A, centered stage) ---------------------------------
   hero:
     shape_label: "MODEX · AGENT"
+    # Per-shape pill labels for the particle morph cycle (T4). Optional map:
+    # omit in a locale to keep the initial shape_label for every shape.
+    shape_labels:
+      hub: "FRAMEWORK — AGENT HUB"
+      knight: "MODEXBOT — PRAISE THE SUN"
+      puzzle: "PLUGIN — PLUGGABLE ECOSYSTEM"
     kicker: "Actively developed · core interfaces stabilizing"
     headline_lead: "Build agents like"
     headline_accent: "building blocks"

@@ -23,8 +23,18 @@
 
   <!-- ==================== Hero — centered stage ==================== -->
   <section class="mdx-hero" id="hero">
-    <!-- T4: particles.js wires into this canvas -->
-    <canvas id="pcv" aria-hidden="true"></canvas>
+    <!-- T4: particles.js wires into this canvas. Label texts come from
+         frontmatter via data-* attrs; the optional shape_labels map
+         (hub/knight/puzzle) is emitted only when a locale defines it —
+         the engine keeps the current pill text for shapes without one. -->
+    <canvas id="pcv" aria-hidden="true"
+            data-knight-src="{{ 'assets/brand/logo.jpg' | url }}"
+            data-label-wordmark="{{ home.hero.shape_label }}"
+            {%- if home.hero.shape_labels %}
+            data-label-hub="{{ home.hero.shape_labels.hub }}"
+            data-label-knight="{{ home.hero.shape_labels.knight }}"
+            data-label-puzzle="{{ home.hero.shape_labels.puzzle }}"
+            {%- endif %}></canvas>
     <div class="mdx-shape-label">{{ home.hero.shape_label }}</div>
     <div class="mdx-hero__inner">
       <p class="mdx-kicker"><span class="mdx-kicker__dot" aria-hidden="true"></span>{{ home.hero.kicker }}</p>
@@ -152,6 +162,11 @@
   </section>
 
 </div>
+
+<!-- T4: particle morph engine — vanilla, no deps; boots itself from the
+     canvas data-* attributes above. Landing-only: home.html renders solely
+     for pages with `template: home.html`. -->
+<script src="{{ 'javascripts/particles.js' | url }}" defer></script>
 
 <!-- Scroll-reveal: plain IntersectionObserver, no libs. Reveals stay visible
      once shown; everything degrades to fully-visible without JS or IO. -->
