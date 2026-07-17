@@ -1,5 +1,327 @@
 /* ==========================================================================
-   ModexAgent — Teal & Ember design tokens
-   See docs/design/2026-07-17-website-design.md §4.1 (gitignored spec).
-   Placeholder for T1 scaffold — the full token layer lands in T2.
+   ModexAgent — Teal & Ember design-token layer (T2)
+   Spec: docs/design/2026-07-17-website-design.md §4.1 (gitignored spec).
+
+   Structure:
+     1. Space Grotesk display-font import (body/code fonts come from the
+        theme's Google Fonts wiring in mkdocs.yml: IBM Plex Sans / JetBrains
+        Mono).
+     2. DAY   — [data-md-color-scheme="default"]: custom --mdx-* tokens
+        (verbatim from spec §4.1) + mapping onto Material's CSS custom
+        properties so ALL native chrome renders in Teal & Ember.
+     3. NIGHT — [data-md-color-scheme="slate"]: same, dark values.
+     4. Shared rules — admonition retint (all 12 types), syntax-highlight
+        remap, display-font application, selection.
+
+   Var names verified against the built Material 9.7.6 stylesheets
+   (site/assets/stylesheets/main.*.css and palette.*.css). extra.css loads
+   after both, and [data-md-color-scheme=...] on <body> outranks Material's
+   unscoped :root defaults for everything inside <body>.
    ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap');
+
+/* ==========================================================================
+   DAY — warm paper, deep teal spine, ember accents
+   ========================================================================== */
+
+[data-md-color-scheme="default"] {
+  /* ------------------------------------------------------------------
+     Custom Teal & Ember tokens — spec §4.1, DAY column, verbatim.
+     Consumed by the custom homepage (later ticket) and available to
+     any page-level styling.
+     ------------------------------------------------------------------ */
+  --mdx-bg: #FAFAF7;               /* warm paper */
+  --mdx-surface: #FFFFFF;
+  --mdx-surface-2: #F4F5F2;        /* second DAY surface from spec §4.1 */
+  --mdx-text: #1A2B26;
+  --mdx-text-dim: #5A6E66;
+  --mdx-brand: #0D9488;            /* deep teal, ≥4.5:1 on paper */
+  --mdx-brand-bright: #14B8A6;
+  --mdx-ember: #B45309;            /* ≥4.5:1 on paper */
+  --mdx-border: #E2E5E0;
+  --mdx-danger: #DC2626;
+
+  /* Display font (Space Grotesk) with pre-appointed CJK fallback */
+  --mdx-font-display: 'Space Grotesk', 'Noto Sans SC', sans-serif;
+
+  /* ------------------------------------------------------------------
+     Body/code font stacks — IBM Plex Sans / JetBrains Mono (loaded via
+     theme.font) + 'Noto Sans SC' pre-appointed as CJK fallback.
+     Overrides Material's body-level --md-*-font-family definitions.
+     ------------------------------------------------------------------ */
+  --md-text-font-family: 'IBM Plex Sans', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+  --md-code-font-family: 'JetBrains Mono', 'Noto Sans SC', SFMono-Regular, Consolas, Menlo, monospace;
+
+  /* ------------------------------------------------------------------
+     Material chrome mapping — page, header, nav, footer
+     ------------------------------------------------------------------ */
+  --md-default-bg-color: #FAFAF7;
+  --md-default-bg-color--light: rgba(250, 250, 247, .7);
+  --md-default-bg-color--lighter: rgba(250, 250, 247, .3);
+  --md-default-bg-color--lightest: rgba(250, 250, 247, .12);
+  --md-default-fg-color: #1A2B26;
+  --md-default-fg-color--light: #5A6E66;
+  --md-default-fg-color--lighter: rgba(26, 43, 38, .32);
+  --md-default-fg-color--lightest: rgba(26, 43, 38, .12);
+
+  /* Primary = deep teal — header + tabs bar background */
+  --md-primary-fg-color: #0D9488;
+  --md-primary-fg-color--dark: #0F766E;
+  --md-primary-fg-color--light: #14B8A6;
+  --md-primary-bg-color: #FFFFFF;
+  --md-primary-bg-color--light: rgba(255, 255, 255, .7);
+
+  /* Accent = ember — hover states, focus rings, active indicators */
+  --md-accent-fg-color: #B45309;
+  --md-accent-fg-color--transparent: rgba(180, 83, 9, .1);
+  --md-accent-bg-color: #FFFFFF;
+  --md-accent-bg-color--light: rgba(255, 255, 255, .7);
+
+  /* Typeset — body text, links, tables, mark.
+     NOTE: links use #0F766E (5.23:1 on paper) — the deeper teal from the
+     spec's own DAY particle palette — because spec brand #0D9488 measures
+     3.58:1 on #FAFAF7, below the 4.5:1 AA floor for body-size link text.
+     --mdx-brand itself keeps the spec value verbatim (see above). */
+  --md-typeset-color: #1A2B26;
+  --md-typeset-a-color: #0F766E;
+  --md-typeset-table-color: #E2E5E0;
+  --md-typeset-table-color--light: rgba(26, 43, 38, .04);
+  --md-typeset-mark-color: rgba(245, 165, 36, .45);
+
+  /* Code — inline code, code blocks, line highlight */
+  --md-code-fg-color: #1A2B26;
+  --md-code-bg-color: #F4F5F2;
+  --md-code-bg-color--light: rgba(244, 245, 242, .7);
+  --md-code-bg-color--lighter: rgba(244, 245, 242, .4);
+  --md-code-hl-color: #14B8A6;
+  --md-code-hl-color--light: rgba(20, 184, 166, .12);
+
+  /* Syntax highlighting — teal/ember slots replace Material's blue/
+     indigo/purple defaults (keyword #3f6ec6, constant #6e59d9,
+     function #a846b9, hl #4287ff). */
+  --md-code-hl-keyword-color: #0D9488;
+  --md-code-hl-function-color: #B45309;
+  --md-code-hl-constant-color: #0F766E;
+  --md-code-hl-string-color: #0F766E;
+  --md-code-hl-number-color: #D97706;
+  --md-code-hl-special-color: #DC2626;
+  --md-code-hl-name-color: var(--md-code-fg-color);
+  --md-code-hl-operator-color: var(--md-default-fg-color--light);
+  --md-code-hl-punctuation-color: var(--md-default-fg-color--light);
+  --md-code-hl-comment-color: var(--md-default-fg-color--light);
+  --md-code-hl-generic-color: var(--md-default-fg-color--light);
+  --md-code-hl-variable-color: var(--md-default-fg-color--light);
+
+  /* Footer — warm graphite with mint text (on-palette in both modes) */
+  --md-footer-bg-color: #0E1512;
+  --md-footer-bg-color--dark: rgba(0, 0, 0, .35);
+  --md-footer-fg-color: #E6F2ED;
+  --md-footer-fg-color--light: rgba(230, 242, 237, .7);
+  --md-footer-fg-color--lighter: rgba(230, 242, 237, .45);
+
+  /* Admonition hues (rgb triplets — consumed by shared rules below).
+     Teal family for informational types, ember for attention, red for
+     danger. No Material blue/purple anywhere. */
+  --mdx-adm-note-rgb: 13 148 136;
+  --mdx-adm-abstract-rgb: 90 110 102;
+  --mdx-adm-info-rgb: 20 184 166;
+  --mdx-adm-tip-rgb: 15 118 110;
+  --mdx-adm-success-rgb: 13 148 136;
+  --mdx-adm-question-rgb: 217 119 6;
+  --mdx-adm-warning-rgb: 180 83 9;
+  --mdx-adm-failure-rgb: 220 38 38;
+  --mdx-adm-danger-rgb: 220 38 38;
+  --mdx-adm-bug-rgb: 220 38 38;
+  --mdx-adm-example-rgb: 180 83 9;
+  --mdx-adm-quote-rgb: 90 110 102;
+}
+
+/* ==========================================================================
+   NIGHT — warm graphite with teal undertone, glowing teal, warm ember
+   ========================================================================== */
+
+[data-md-color-scheme="slate"] {
+  /* ------------------------------------------------------------------
+     Custom Teal & Ember tokens — spec §4.1, NIGHT column, verbatim.
+     ------------------------------------------------------------------ */
+  --mdx-bg: #0E1512;               /* warm graphite, teal undertone */
+  --mdx-surface: #18201D;
+  --mdx-surface-2: #131B18;        /* secondary night surface (validated
+                                      prototype usage; spec lists one) */
+  --mdx-text: #E6F2ED;
+  --mdx-text-dim: #8FA69D;
+  --mdx-brand: #2DD4A8;            /* logo teal */
+  --mdx-brand-bright: #5EEAD4;     /* glow */
+  --mdx-ember: #F5A524;
+  --mdx-border: rgba(45, 212, 168, .14);
+  --mdx-danger: #F87171;
+
+  /* Display font (Space Grotesk) with pre-appointed CJK fallback */
+  --mdx-font-display: 'Space Grotesk', 'Noto Sans SC', sans-serif;
+
+  /* Body/code font stacks + 'Noto Sans SC' CJK fallback */
+  --md-text-font-family: 'IBM Plex Sans', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+  --md-code-font-family: 'JetBrains Mono', 'Noto Sans SC', SFMono-Regular, Consolas, Menlo, monospace;
+
+  /* ------------------------------------------------------------------
+     Material chrome mapping — page, header, nav, footer
+     ------------------------------------------------------------------ */
+  --md-default-bg-color: #0E1512;
+  --md-default-bg-color--light: rgba(14, 21, 18, .54);
+  --md-default-bg-color--lighter: rgba(14, 21, 18, .26);
+  --md-default-bg-color--lightest: rgba(14, 21, 18, .07);
+  --md-default-fg-color: #E6F2ED;
+  --md-default-fg-color--light: #8FA69D;
+  --md-default-fg-color--lighter: rgba(230, 242, 237, .32);
+  --md-default-fg-color--lightest: rgba(230, 242, 237, .12);
+
+  /* Primary — dark-mode header/tabs stay elevated graphite (not bright
+     teal); logo teal is reserved for links/brand accents via
+     --md-typeset-a-color and --mdx-brand. */
+  --md-primary-fg-color: #18201D;
+  --md-primary-fg-color--dark: #0E1512;
+  --md-primary-fg-color--light: #2DD4A8;
+  --md-primary-bg-color: #E6F2ED;
+  --md-primary-bg-color--light: rgba(230, 242, 237, .7);
+
+  /* Accent = night ember */
+  --md-accent-fg-color: #F5A524;
+  --md-accent-fg-color--transparent: rgba(245, 165, 36, .14);
+  --md-accent-bg-color: #0E1512;
+  --md-accent-bg-color--light: rgba(14, 21, 18, .7);
+
+  /* Typeset */
+  --md-typeset-color: #E6F2ED;
+  --md-typeset-a-color: #2DD4A8;
+  --md-typeset-table-color: rgba(45, 212, 168, .14);
+  --md-typeset-table-color--light: rgba(230, 242, 237, .05);
+  --md-typeset-mark-color: rgba(245, 165, 36, .35);
+
+  /* Code */
+  --md-code-fg-color: #E6F2ED;
+  --md-code-bg-color: #18201D;
+  --md-code-bg-color--light: rgba(24, 32, 29, .7);
+  --md-code-bg-color--lighter: rgba(24, 32, 29, .4);
+  --md-code-hl-color: #2DD4A8;
+  --md-code-hl-color--light: rgba(45, 212, 168, .15);
+
+  /* Syntax highlighting — glowing teal + ember on dark surface
+     (replaces slate's #2977ff/#9383e2/#c973d9/#6791e0 set). */
+  --md-code-hl-keyword-color: #2DD4A8;
+  --md-code-hl-function-color: #F5A524;
+  --md-code-hl-constant-color: #99F6E4;
+  --md-code-hl-string-color: #5EEAD4;
+  --md-code-hl-number-color: #FBBF24;
+  --md-code-hl-special-color: #F87171;
+  --md-code-hl-name-color: var(--md-code-fg-color);
+  --md-code-hl-operator-color: var(--md-default-fg-color--light);
+  --md-code-hl-punctuation-color: var(--md-default-fg-color--light);
+  --md-code-hl-comment-color: var(--md-default-fg-color--light);
+  --md-code-hl-generic-color: var(--md-default-fg-color--light);
+  --md-code-hl-variable-color: var(--md-default-fg-color--light);
+
+  /* Footer — same warm graphite as page bg, hairline separation */
+  --md-footer-bg-color: #0E1512;
+  --md-footer-bg-color--dark: rgba(0, 0, 0, .35);
+  --md-footer-fg-color: #E6F2ED;
+  --md-footer-fg-color--light: rgba(230, 242, 237, .7);
+  --md-footer-fg-color--lighter: rgba(230, 242, 237, .45);
+
+  /* Admonition hues (rgb triplets) — night variants */
+  --mdx-adm-note-rgb: 45 212 168;
+  --mdx-adm-abstract-rgb: 143 166 157;
+  --mdx-adm-info-rgb: 94 234 212;
+  --mdx-adm-tip-rgb: 153 246 228;
+  --mdx-adm-success-rgb: 45 212 168;
+  --mdx-adm-question-rgb: 251 191 36;
+  --mdx-adm-warning-rgb: 245 165 36;
+  --mdx-adm-failure-rgb: 248 113 113;
+  --mdx-adm-danger-rgb: 248 113 113;
+  --mdx-adm-bug-rgb: 248 113 113;
+  --mdx-adm-example-rgb: 245 158 11;
+  --mdx-adm-quote-rgb: 143 166 157;
+}
+
+/* ==========================================================================
+   Shared rules — scheme-agnostic, driven by the per-scheme tokens above
+   ========================================================================== */
+
+/* Admonitions — all 12 types retinted from Material's stock palette
+   (note #448aff blue, example #7c4dff purple, info #00b0ff, ...) onto
+   the Teal & Ember hue slots defined per scheme. Structure mirrors
+   Material's own rules: border, focus glow, tinted title, colored icon. */
+
+.md-typeset .admonition.note,     .md-typeset details.note     { border-color: rgb(var(--mdx-adm-note-rgb)); }
+.md-typeset .admonition.abstract, .md-typeset details.abstract { border-color: rgb(var(--mdx-adm-abstract-rgb)); }
+.md-typeset .admonition.info,     .md-typeset details.info     { border-color: rgb(var(--mdx-adm-info-rgb)); }
+.md-typeset .admonition.tip,      .md-typeset details.tip      { border-color: rgb(var(--mdx-adm-tip-rgb)); }
+.md-typeset .admonition.success,  .md-typeset details.success  { border-color: rgb(var(--mdx-adm-success-rgb)); }
+.md-typeset .admonition.question, .md-typeset details.question { border-color: rgb(var(--mdx-adm-question-rgb)); }
+.md-typeset .admonition.warning,  .md-typeset details.warning  { border-color: rgb(var(--mdx-adm-warning-rgb)); }
+.md-typeset .admonition.failure,  .md-typeset details.failure  { border-color: rgb(var(--mdx-adm-failure-rgb)); }
+.md-typeset .admonition.danger,   .md-typeset details.danger   { border-color: rgb(var(--mdx-adm-danger-rgb)); }
+.md-typeset .admonition.bug,      .md-typeset details.bug      { border-color: rgb(var(--mdx-adm-bug-rgb)); }
+.md-typeset .admonition.example,  .md-typeset details.example  { border-color: rgb(var(--mdx-adm-example-rgb)); }
+.md-typeset .admonition.quote,    .md-typeset details.quote    { border-color: rgb(var(--mdx-adm-quote-rgb)); }
+
+.md-typeset .admonition.note:focus-within,     .md-typeset details.note:focus-within     { box-shadow: 0 0 0 .2rem rgb(var(--mdx-adm-note-rgb) / .1); }
+.md-typeset .admonition.abstract:focus-within, .md-typeset details.abstract:focus-within { box-shadow: 0 0 0 .2rem rgb(var(--mdx-adm-abstract-rgb) / .1); }
+.md-typeset .admonition.info:focus-within,     .md-typeset details.info:focus-within     { box-shadow: 0 0 0 .2rem rgb(var(--mdx-adm-info-rgb) / .1); }
+.md-typeset .admonition.tip:focus-within,      .md-typeset details.tip:focus-within      { box-shadow: 0 0 0 .2rem rgb(var(--mdx-adm-tip-rgb) / .1); }
+.md-typeset .admonition.success:focus-within,  .md-typeset details.success:focus-within  { box-shadow: 0 0 0 .2rem rgb(var(--mdx-adm-success-rgb) / .1); }
+.md-typeset .admonition.question:focus-within, .md-typeset details.question:focus-within { box-shadow: 0 0 0 .2rem rgb(var(--mdx-adm-question-rgb) / .1); }
+.md-typeset .admonition.warning:focus-within,  .md-typeset details.warning:focus-within  { box-shadow: 0 0 0 .2rem rgb(var(--mdx-adm-warning-rgb) / .1); }
+.md-typeset .admonition.failure:focus-within,  .md-typeset details.failure:focus-within  { box-shadow: 0 0 0 .2rem rgb(var(--mdx-adm-failure-rgb) / .1); }
+.md-typeset .admonition.danger:focus-within,   .md-typeset details.danger:focus-within   { box-shadow: 0 0 0 .2rem rgb(var(--mdx-adm-danger-rgb) / .1); }
+.md-typeset .admonition.bug:focus-within,      .md-typeset details.bug:focus-within      { box-shadow: 0 0 0 .2rem rgb(var(--mdx-adm-bug-rgb) / .1); }
+.md-typeset .admonition.example:focus-within,  .md-typeset details.example:focus-within  { box-shadow: 0 0 0 .2rem rgb(var(--mdx-adm-example-rgb) / .1); }
+.md-typeset .admonition.quote:focus-within,    .md-typeset details.quote:focus-within    { box-shadow: 0 0 0 .2rem rgb(var(--mdx-adm-quote-rgb) / .1); }
+
+.md-typeset .note > .admonition-title,     .md-typeset .note > summary     { background-color: rgb(var(--mdx-adm-note-rgb) / .1); }
+.md-typeset .abstract > .admonition-title, .md-typeset .abstract > summary { background-color: rgb(var(--mdx-adm-abstract-rgb) / .1); }
+.md-typeset .info > .admonition-title,     .md-typeset .info > summary     { background-color: rgb(var(--mdx-adm-info-rgb) / .1); }
+.md-typeset .tip > .admonition-title,      .md-typeset .tip > summary      { background-color: rgb(var(--mdx-adm-tip-rgb) / .1); }
+.md-typeset .success > .admonition-title,  .md-typeset .success > summary  { background-color: rgb(var(--mdx-adm-success-rgb) / .1); }
+.md-typeset .question > .admonition-title, .md-typeset .question > summary { background-color: rgb(var(--mdx-adm-question-rgb) / .1); }
+.md-typeset .warning > .admonition-title,  .md-typeset .warning > summary  { background-color: rgb(var(--mdx-adm-warning-rgb) / .1); }
+.md-typeset .failure > .admonition-title,  .md-typeset .failure > summary  { background-color: rgb(var(--mdx-adm-failure-rgb) / .1); }
+.md-typeset .danger > .admonition-title,   .md-typeset .danger > summary   { background-color: rgb(var(--mdx-adm-danger-rgb) / .1); }
+.md-typeset .bug > .admonition-title,      .md-typeset .bug > summary      { background-color: rgb(var(--mdx-adm-bug-rgb) / .1); }
+.md-typeset .example > .admonition-title,  .md-typeset .example > summary  { background-color: rgb(var(--mdx-adm-example-rgb) / .1); }
+.md-typeset .quote > .admonition-title,    .md-typeset .quote > summary    { background-color: rgb(var(--mdx-adm-quote-rgb) / .1); }
+
+.md-typeset .note > .admonition-title::before,     .md-typeset .note > summary::before     { background-color: rgb(var(--mdx-adm-note-rgb)); }
+.md-typeset .abstract > .admonition-title::before, .md-typeset .abstract > summary::before { background-color: rgb(var(--mdx-adm-abstract-rgb)); }
+.md-typeset .info > .admonition-title::before,     .md-typeset .info > summary::before     { background-color: rgb(var(--mdx-adm-info-rgb)); }
+.md-typeset .tip > .admonition-title::before,      .md-typeset .tip > summary::before      { background-color: rgb(var(--mdx-adm-tip-rgb)); }
+.md-typeset .success > .admonition-title::before,  .md-typeset .success > summary::before  { background-color: rgb(var(--mdx-adm-success-rgb)); }
+.md-typeset .question > .admonition-title::before, .md-typeset .question > summary::before { background-color: rgb(var(--mdx-adm-question-rgb)); }
+.md-typeset .warning > .admonition-title::before,  .md-typeset .warning > summary::before  { background-color: rgb(var(--mdx-adm-warning-rgb)); }
+.md-typeset .failure > .admonition-title::before,  .md-typeset .failure > summary::before  { background-color: rgb(var(--mdx-adm-failure-rgb)); }
+.md-typeset .danger > .admonition-title::before,   .md-typeset .danger > summary::before   { background-color: rgb(var(--mdx-adm-danger-rgb)); }
+.md-typeset .bug > .admonition-title::before,      .md-typeset .bug > summary::before      { background-color: rgb(var(--mdx-adm-bug-rgb)); }
+.md-typeset .example > .admonition-title::before,  .md-typeset .example > summary::before  { background-color: rgb(var(--mdx-adm-example-rgb)); }
+.md-typeset .quote > .admonition-title::before,    .md-typeset .quote > summary::before    { background-color: rgb(var(--mdx-adm-quote-rgb)); }
+
+/* Display font — Space Grotesk for headings + site title (spec §4.2:
+   "Display/headings: Space Grotesk"). Body stays IBM Plex Sans via
+   --md-text-font-family. */
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6,
+.md-header__title {
+  font-family: var(--mdx-font-display);
+}
+
+/* Text selection — brand-tinted in both modes */
+[data-md-color-scheme="default"] ::selection {
+  background-color: rgba(20, 184, 166, .25);
+}
+
+[data-md-color-scheme="slate"] ::selection {
+  background-color: rgba(45, 212, 168, .3);
+}

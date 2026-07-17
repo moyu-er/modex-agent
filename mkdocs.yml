@@ -12,6 +12,11 @@ exclude_docs: design/**
 theme:
   name: material
   custom_dir: overrides
+  logo: assets/brand/logo-icon.svg
+  favicon: assets/brand/logo-icon.svg
+  font:
+    text: IBM Plex Sans
+    code: JetBrains Mono
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
