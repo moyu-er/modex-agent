@@ -57,6 +57,7 @@ nav:
       - Concepts:
           - Graph Engine: docs/concepts/graph-engine.md
           - Multi-Agent: docs/concepts/multi-agent.md
+          - External Coding Agents: docs/concepts/external-coding-agents.md
           - Memory: docs/concepts/memory.md
           - Runtime Layers: docs/concepts/runtime-layers.md
 

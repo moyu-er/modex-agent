@@ -59,7 +59,7 @@ external_coding pool, which has no subagents and no graph runtime of its own.
 
 ## External coding agents as peers
 
-External coding agents such as **Pi** and **OpenCode** join the same peer topology as NORMAL main agents of their own dedicated pools (`pool_pi`, `pool_opencode`). They don't have the `send_to_agent` tool, so they reply through a CLI shim the framework ships for this purpose: `modexctl send` (part of the `modexbot`/`modexctl` facade). The shim delivers an XML-wrapped `<agent_message>` straight into the target workspace's inbox. Every other agent reaches them with the standard `send_to_agent` tool, so from the framework's point of view they are ordinary pool mains.
+External coding agents such as **Pi** and **OpenCode** join the same peer topology as NORMAL main agents of their own dedicated pools. They don't have the `send_to_agent` tool, so they reply through a CLI shim the framework ships for this purpose: `modexctl send`. Every other agent reaches them with the standard `send_to_agent`, so from the framework's point of view they are ordinary pool mains — same peer wire, different interior. See [External Coding Agents](external-coding-agents.md) for the contrast with native ReAct pools, how to register one, and what the integration does and doesn't cover.
 
 ## I/O stays outside the agent
 
