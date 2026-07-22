@@ -59,9 +59,31 @@ After installation, `modexbot` is available from any terminal:
 | `modexbot start` | Start the bot |
 | `modexbot stop` | Stop the bot |
 | `modexbot restart` | Restart the bot |
+| `modexbot install` | Build or rebuild the WebUI frontend (`-f` to force) |
 | `modexbot logs -f` | Follow live logs |
 | `modexbot config` | Run the config wizard |
 | `modexbot model` | Model settings |
+
+## Configuration files
+
+ModexBot splits configuration across several files. None of them require
+hand-editing — the WebUI Settings tabs and the `modexbot config` / `modexbot
+model` wizards cover everything — but knowing the layout helps for
+troubleshooting.
+
+| File | Holds | Edited via |
+|------|-------|-----------|
+| `.env` | Only `TIMEZONE` (e.g. `Asia/Shanghai`). | Hand-edit |
+| `config/model.yml` | Model providers, API keys, default model. Shared across all pools. | WebUI **Models** tab or `modexbot model` |
+| `config/im.yml` | IM adapter credentials (QQ, Telegram). Gitignored. | WebUI **IM** tab |
+| `config/bot_config.yml` | Cross-cutting: WebUI port, workspace, safety timeouts, observability. | Hand-edit or WebUI |
+| `config/pools/<name>/pool.yml` | Per-pool agents, tools, approval, peers. | WebUI **Pools** tab |
+| `config/mcp/registry.json` | MCP server registry. Gitignored. | WebUI **MCP** tab |
+
+!!! tip "Configurable port"
+    The WebUI port defaults to `21800` (set in `config/bot_config.yml` under
+    `webui.port`). Override it with the `MODEXBOT_PORT` environment variable if
+    you need a different port.
 
 ## Uninstall
 

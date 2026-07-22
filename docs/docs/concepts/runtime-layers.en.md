@@ -72,13 +72,18 @@ an interceptor instead.
 | `AFTER_TOOL_EXECUTION` | `after_tool_execution` | After a tool batch | Result transform |
 | `AFTER_LLM_RESPONSE` | `after_llm_response` | After the LLM responds | Output guard, loop detection |
 | `FINALIZE_CONTENT` | `finalize_content` | Before final output (sync) | Content formatting |
+| `FINALLY_TURN` | `finally_turn` | After `AFTER_TURN`, always runs (even on error) | Last-resort cleanup |
 
-The `Hook` Protocol makes every method optional — implement only the points
-you care about. `HookRunner` dispatches them sequentially, applies the
-per-hook timeout, and honors an `HookErrorPolicy` (`IGNORE` / `LOG` / `ABORT`)
-on failure. `HookResult(veto=True, message="...")` rejects an action without
-raising; it is a *lightweight* denial that does **not** exit the agent, which
-is the line that separates a hook veto from a control-plane cancellation.
+`Hook` is an **ABC**, not a Protocol. Each `HookPoint` has a matching per-point
+ABC (`BeforeTurnHook`, `AfterTurnHook`, `BeforeIterationHook`, …,
+`FinallyTurnHook`) with a single `@abstractmethod`. A concrete hook inherits
+from one or more of these ABCs and implements only the methods it cares about —
+`HookRunner` dispatches via `isinstance(hook, dispatch_cls)`, so unimplemented
+points are simply skipped. `HookRunner` applies the per-hook timeout and honors
+an `HookErrorPolicy` (`IGNORE` / `LOG` / `ABORT`) on failure.
+`HookResult(veto=True, message="...")` rejects an action without raising; it
+is a *lightweight* denial that does **not** exit the agent, which is the line
+that separates a hook veto from a control-plane cancellation.
 
 !!! note "Per-turn state belongs in `ctx.runtime.state`"
     Pool mode means an agent instance may serve many sessions concurrently.
@@ -86,11 +91,24 @@ is the line that separates a hook veto from a control-plane cancellation.
     `ReActTurnState`), not in instance attributes. The framework's own
     `LoopDetectionHook` and `InboxFlushHook` follow this rule.
 
+!!! note "Iteration hooks vs. GraphRuntime"
+    `BEFORE_ITERATION` and `AFTER_ITERATION` are ReAct concepts, not universal
+    graph concepts. The [Graph Engine](graph-engine.md)'s `GraphRuntime` ABC
+    deliberately has no `before_iteration` / `after_iteration` methods — it
+    auto-invokes only `before_node` / `after_node` at node boundaries. ReAct
+    nodes dispatch `BEFORE_ITERATION` / `AFTER_ITERATION` explicitly via
+    `ctx.runtime.dispatch_hook(...)` at the exact code points that define an
+    iteration. This keeps the graph engine free of ReAct-specific lifecycle
+    assumptions.
+
 Built-in hooks include `logging`, `runtime_context`, `inbox_flush`,
-`subagent_auto_send`, and `experience_review`. The
-`subagent_auto_send` hook is the safety net that keeps the multi-agent star
-topology healthy — if a subagent's LLM forgets to call `send_to_agent`, it
-auto-forwards the final output to the parent (see [Multi-Agent](multi-agent.md)).
+`subagent_auto_send`, `experience_review`, `checkpoint`, `loop_detection`, and
+`training_data`. The `subagent_auto_send` hook is the safety net that keeps the
+multi-agent star topology healthy — if a subagent's LLM forgets to call
+`send_to_agent`, it auto-forwards the final output to the parent (see
+[Multi-Agent](multi-agent.md)). The `loop_detection` hook raises a
+`LoopDetectedError` at `AFTER_LLM_RESPONSE` when it detects a runaway ReAct
+loop (see [Graph Engine](graph-engine.md)).
 
 ## Interceptor: the AOP onion chain
 

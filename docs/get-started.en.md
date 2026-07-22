@@ -35,6 +35,8 @@ Prefer the terminal? `modexbot model` (or `modexbot config`) runs an interactive
 - **Streaming chat.** Agent output renders incrementally as it is generated, with reasoning blocks, Markdown, syntax-highlighted code, and mermaid diagrams inline.
 - **TodoPanel.** When the agent breaks work into steps, a side panel tracks the live task list so you can follow progress without prompting.
 - **Per-turn model selector.** Pick the provider and model in the chat composer before each message. Models are defined once and shared across pools.
+- **Pool selector.** A dropdown in the sidebar picks the active pool for a new conversation — `default`, `coder`, or `opencode` ship out of the box. Each conversation is pinned to its pool.
+- **Workspace browser.** A modal directory browser lets you switch between live workspaces (`/cd`) without leaving the UI. Switching mutates only a per-session pointer — no `os.chdir`, no restart.
 - **In-browser config editor.** Edit pools, models, MCP servers, skills, and system prompts from Settings. No YAML hand-editing.
 - **Session tree.** Conversations are fully isolated, with parent/child branches per session, and past sessions reload from history.
 - **Attachments.** Upload files in the composer; the agent can read them, and you can download results back.

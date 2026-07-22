@@ -57,7 +57,7 @@ home:
     cards:
       - icon: graph
         title: "Graph-driven ReAct"
-        desc: "Execution modeled as Graph + Node + Edge. Interrupt mid-run, persist state, resume exactly where it stopped."
+        desc: "A standalone typed graph engine (modex_graph). Interrupt mid-run, persist state, resume exactly where it stopped."
       - icon: shield
         title: "Interruptible Approval"
         desc: "Sensitive tool calls pause for a human go-ahead. Tiered policies, cascade cancel, off by default."
@@ -66,7 +66,7 @@ home:
         desc: "Strict star topology per pool, peer messaging across pools. One send_to_agent tool — the framework routes."
       - icon: layers
         title: "Multi-tier Memory"
-        desc: "Session, Archive, Knowledge and Experience layers. The Dream Engine consolidates archives into knowledge."
+        desc: "Session, Archive, Core Memory and Experience layers. The Dream Engine consolidates archives into Core Memory."
       - icon: term
         title: "Cross-platform Terminal"
         desc: "WinPTY, ConPTY, pexpect and tmux behind one interface. Visible and headless PTY modes."
