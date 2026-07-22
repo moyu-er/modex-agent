@@ -1,6 +1,6 @@
 ---
 title: External Coding Agents
-description: Plug industry-standard CLI coding agents (Pi, OpenCode) into your ModexAgent deployment as pool main agents, reachable through the same send_to_agent every other agent uses.
+description: Plug industry-standard CLI coding agents (Pi, OpenCode) into your ModexAgent deployment as pool main agents or subagents, reachable through the same send_to_agent every other agent uses.
 ---
 
 # External Coding Agents
@@ -37,7 +37,7 @@ A native pool is one box: the framework owns the agent, its memory, its tools, a
 | | Native ReAct agent | External coding agent |
 |---|---|---|
 | Runs as | In-process Python | External CLI (subprocess or warm SSE) |
-| Pool role | Main agent or subagent | Main agent only |
+| Pool role | Main agent or subagent | Main agent or subagent (ADR-0027) |
 | Reaches peers with | `send_to_agent` tool | `modexctl send` CLI shim |
 | Memory | Framework 3-layer memory | Provider's own session file |
 | Tool execution | Framework `ToolManager` | Provider's own tools (bash, edit, …) |
@@ -47,8 +47,39 @@ A native pool is one box: the framework owns the agent, its memory, its tools, a
 
 The asymmetry is deliberate. The framework does not re-implement what the provider already does well (file editing, shell, session resume); it just routes messages in and out and renders the provider's event stream in your WebUI.
 
-!!! note "Why external agents can't be subagents"
-    The framework's [star topology](multi-agent.md) forbids subagent→peer sends. An external CLI registered as a subagent could only talk to its parent, defeating the point. External agents are NORMAL mains of their own pools — full peers, addressable by name from any other pool's main agent.
+## External coding agents as subagents (ADR-0027)
+
+External coding agents are not limited to pool main agents. Per
+[ADR-0027](https://github.com/moyu-er/ModexAgent/blob/main/docs/adr/0027-external-coding-agent-as-subagent.md),
+an external coding CLI can also be configured as a **subagent** inside a react
+pool. The `SubagentSpec` gains `execution_strategy` and `provider_kind` fields,
+so a subagent template can opt into the external coding harness just like a
+pool main agent can.
+
+The reference bot's `coder` pool ships a real example: the `orchestrator` main
+agent delegates implementation tasks to a `worker` subagent that runs the
+OpenCode CLI:
+
+```yaml
+# config/pools/coder/templates/worker.yml
+agent_name: worker
+execution_strategy: external_coding   # opt-in; default is "react"
+provider_kind: opencode               # "pi" or "opencode"
+```
+
+The orchestrator reaches `worker` through the same `send_to_agent` it uses for
+any subagent. The worker runs the external CLI, does its work with its own
+tools and session, and returns the result through the standard subagent
+communication path.
+
+!!! note "Star topology still applies"
+    As a subagent, the external coding agent follows the same star-topology
+    rule as any subagent: it can only talk to its parent. It does not
+    participate in cross-pool peer messaging and does not have the
+    `send_to_agent` tool. Peer messaging remains a main-agent-only capability —
+    external agents that need to be full peers are configured as main agents of
+    their own dedicated pools (see the `opencode` pool in
+    [Multi-Agent](multi-agent.md)).
 
 ## How to use it
 
@@ -106,8 +137,7 @@ Adding a new provider is one file (`providers/<name>.py`) plus one value in the 
 
 ## What it doesn't do
 
-- **Cannot register as a subagent.** Star topology (ADR-0015) forbids it. External agents are NORMAL mains only.
-- **No framework memory layer on external pools.** The provider's own session file is the source of truth. The transcript you see in the WebUI is a UI projection — the external CLI never reads it back.
+- **No framework memory layer on external agents.** The provider's own session file is the source of truth. The transcript you see in the WebUI is a UI projection — the external CLI never reads it back. This applies to both external pool mains and external subagents.
 - **No framework approval on external pools.** Risky-action gating uses the provider's own permission model (e.g. OpenCode's `--dangerously-skip-permissions` flag), not the framework's `GraphInterrupt`. The framework's approval UI does not fire for external pool work.
 - **No cross-workspace routing.** `modexctl send` routes within one workspace's inbox. Multi-workspace topologies are out of scope.
 - **Status / log / token-usage events are dropped.** The parser interface admits them for later; day one ships text, reasoning, tool calls, tool results, and errors.
@@ -117,4 +147,4 @@ Adding a new provider is one file (`providers/<name>.py`) plus one value in the 
 - External agents sit on the cross-pool peer topology defined in [Multi-Agent](multi-agent.md).
 - They do **not** run the [Graph Engine](graph-engine.md) — that's why framework approval doesn't apply to them.
 - Why external pools have no framework memory: see [Memory](memory.md).
-- For the full design and rationale, see ADR-0022 in the framework repo.
+- For the full design and rationale, see ADR-0022 (main-agent integration) and ADR-0027 (subagent extension) in the framework repo.
