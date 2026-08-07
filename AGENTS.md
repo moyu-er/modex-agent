@@ -54,7 +54,7 @@ git -C .modexagent-main fetch --depth 1 origin main && git -C .modexagent-main r
 | 26 framework modules, one-liners | `.modexagent-main/src/modex_agent/AGENTS.md` |
 | Canonical app reference (WebUI, pools, IM adapters) | `.modexagent-main/examples/bot_project/README.md` |
 | From-source setup detail | `.modexagent-main/docs/bot-local-setup.md` |
-| ADRs (architecture decisions) | `.modexagent-main/docs/adr/` (ADR-0001 ~ 0024 on `main`; index may lag) |
+| ADRs (architecture decisions) | `.modexagent-main/docs/adr/` (ADR-0001 ~ 0035 current on `main`, plus a `history/` archive; index may lag) |
 | Docs index | `.modexagent-main/docs/AGENTS.md` |
 | Design decisions D1–D10 + rationale | `docs/design/2026-07-17-website-design.md` (gitignored, local only) |
 
@@ -131,9 +131,10 @@ gh run list --limit 1
 - **MkDocs 2.0** will remove the plugin system (our i18n plugin + template
   overrides depend on it). Versions pinned in `requirements.txt`. Evaluate
   migration before ever upgrading past mkdocs 1.x.
-- **`releases/latest` link** on the Installation page points to GitHub Releases,
-  which has no release yet. Copy handles this gracefully; the link starts
-  working when the first `ModexBot-Setup` release is cut.
+- **The only release so far is a dev prerelease.** `v1.0.0-dev` (cut 2026-07-26)
+  ships the `ModexBot-Setup-1.0.0-dev.exe` installer, so the `releases/latest`
+  link on the Installation page works — but when a stable release lands,
+  re-audit the installer-first copy (landing Get Started, Installation page).
 - **Background subagents on this setup occasionally lose their handles.** If a
   delegated task dies, check the file tree for artifacts, then re-dispatch
   (sync mode for critical reviews).

@@ -54,9 +54,9 @@ control channel is **consumed by an interceptor** (`ControlDrainInterceptor`),
 not by a control-loop of its own. That is why `control/` ships the data types
 and the channel, while the actual draining lives in the interceptor chain.
 
-## Hook: observe and lightly veto
+## Hook: observe and inject context
 
-Hooks are lifecycle extension points. They execute at nine defined
+Hooks are lifecycle extension points. They execute at eleven defined
 `HookPoint`s, run synchronously with a default 10-second timeout, and observe
 or lightly modify context — they do **not** wrap execution. A hook that needs
 to transform input/output, enforce a hard timeout, or cancel a call belongs in
@@ -71,25 +71,30 @@ an interceptor instead.
 | `BEFORE_TOOL_EXECUTION` | `before_tool_execution` | Before a tool batch | Policy guard |
 | `AFTER_TOOL_EXECUTION` | `after_tool_execution` | After a tool batch | Result transform |
 | `AFTER_LLM_RESPONSE` | `after_llm_response` | After the LLM responds | Output guard, loop detection |
+| `BEFORE_LLM` | `before_llm` | Before the LLM provider call | Prompt capture, LLM-call timing |
 | `FINALIZE_CONTENT` | `finalize_content` | Before final output (sync) | Content formatting |
 | `FINALLY_TURN` | `finally_turn` | After `AFTER_TURN`, always runs (even on error) | Last-resort cleanup |
+| `AFTER_APPROVAL` | `after_approval` | After an approval decision is applied, before the graph resumes | Approval-span timing |
 
 `Hook` is an **ABC**, not a Protocol. Each `HookPoint` has a matching per-point
 ABC (`BeforeTurnHook`, `AfterTurnHook`, `BeforeIterationHook`, …,
-`FinallyTurnHook`) with a single `@abstractmethod`. A concrete hook inherits
-from one or more of these ABCs and implements only the methods it cares about —
-`HookRunner` dispatches via `isinstance(hook, dispatch_cls)`, so unimplemented
-points are simply skipped. `HookRunner` applies the per-hook timeout and honors
-an `HookErrorPolicy` (`IGNORE` / `LOG` / `ABORT`) on failure.
-`HookResult(veto=True, message="...")` rejects an action without raising; it
-is a *lightweight* denial that does **not** exit the agent, which is the line
-that separates a hook veto from a control-plane cancellation.
+`BeforeLLMHook`, `AfterApprovalHook`) with a single `@abstractmethod`. A
+concrete hook inherits from one or more of these ABCs and implements only the
+methods it cares about — `HookRunner` dispatches via
+`isinstance(hook, dispatch_cls)`, so unimplemented points are simply skipped.
+`HookRunner` applies the per-hook timeout and honors an `HookErrorPolicy`
+(`IGNORE` / `LOG` / `ABORT`) on failure. Hooks are **observation-only**: they
+return `None`, and the former `HookResult` veto mechanism has been removed —
+to deny an execution, use an interceptor; to terminate a turn, raise an
+`AgentControlError`, which is the control-plane path described below.
 
-!!! note "Per-turn state belongs in `ctx.runtime.state`"
-    Pool mode means an agent instance may serve many sessions concurrently.
-    Per-turn state must live in `ctx.runtime.state` (typed
-    `ReActTurnState`), not in instance attributes. The framework's own
-    `LoopDetectionHook` and `InboxFlushHook` follow this rule.
+!!! note "Per-turn state belongs in `ctx.runtime.state.custom`"
+    Hooks are per-pool instances shared across all sessions a pool serves
+    concurrently. Per-turn state must live in `ctx.runtime.state.custom` (a
+    typed dict on `ReActTurnState`, keyed by `TurnCustomKey`), not in instance
+    attributes — a `self._state[session_id]` dict grows for the pool's whole
+    lifetime with no cleanup path. The only acceptable instance attributes are
+    immutable configuration injected at construction.
 
 !!! note "Iteration hooks vs. GraphRuntime"
     `BEFORE_ITERATION` and `AFTER_ITERATION` are ReAct concepts, not universal
@@ -102,13 +107,24 @@ that separates a hook veto from a control-plane cancellation.
     assumptions.
 
 Built-in hooks include `logging`, `runtime_context`, `inbox_flush`,
-`subagent_auto_send`, `experience_review`, `checkpoint`, `loop_detection`, and
-`training_data`. The `subagent_auto_send` hook is the safety net that keeps the
-multi-agent star topology healthy — if a subagent's LLM forgets to call
-`send_to_agent`, it auto-forwards the final output to the parent (see
-[Multi-Agent](multi-agent.md)). The `loop_detection` hook raises a
-`LoopDetectedError` at `AFTER_LLM_RESPONSE` when it detects a runaway ReAct
+`subagent_auto_send`, `env_injection`, `experience_review`, `checkpoint`,
+`loop_detection`, and `training_data`. The `subagent_auto_send` hook fires at
+`FINALLY_TURN` on every subagent turn and is the **sole** notification path
+back to the parent — subagents have no communication tools, so the hook writes
+the numbered `OUTPUT_<n>.md` deliverable itself and notifies the parent via
+the bus (see [Multi-Agent](multi-agent.md)). The `loop_detection` hook raises
+a `LoopDetectedError` at `AFTER_LLM_RESPONSE` when it detects a runaway ReAct
 loop (see [Graph Engine](graph-engine.md)).
+
+Observability is hook-driven too: `TraceCollectorHook` (in `trace/`, not
+`hook/builtin/`) implements `BeforeLLMHook`, `AfterApprovalHook`, and the
+other lifecycle ABCs to record OpenTelemetry GenAI-semconv spans — LLM-call
+duration, prompt capture, and approval spans among them (ADR-0024). Memory
+cleanup has its own separate hook family: `MemoryHook` contracts with
+`CLEANUP_TRIGGERED` / `CLEANUP_FINISHED` points, dispatched by the memory
+system rather than `HookRunner` — the built-in `TodoReorientationHook`
+re-orients the agent after cleanup prunes history (see
+[Memory](memory.md)).
 
 ## Interceptor: the AOP onion chain
 
@@ -142,9 +158,17 @@ Three invariants keep the chain safe:
    rogue interceptor silently approve a sensitive tool call; the framework
    keeps the two paths separate.
 
-Built-in interceptors: `ToolResultLimit` caps tool output size, and
+Built-in interceptors: `ToolResultLimitInterceptor` caps tool output size
+(overflow spills to an `OverflowStore`); `ToolTimeoutInterceptor` enforces a
+mandatory per-invocation tool deadline (default 120s) — `ToolExecutor`
+composes it as the innermost interceptor, so every ReAct path has the deadline
+without application wiring, and on expiry it cancels the tool coroutine and
+returns a `<tool_timeout>` `ToolResult` while the loop continues; and
 `ControlDrainInterceptor` + `LlmCancelInterceptor` consume the control
 channel — they are the seam between Control and Interceptor.
+(`interceptor/builtin/tool_approval.py` only hosts `ArgumentMatcher`, a
+classification helper used by `ApprovalRuntime` — it is not an interceptor, so
+invariant 3 above still holds.)
 
 ## Control: the control plane
 

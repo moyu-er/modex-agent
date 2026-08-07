@@ -12,11 +12,17 @@ channels instead of ad-hoc function calls. Two components do the routing: the
 channel each agent listens on.
 
 The `AgentPool` manages the resident agents' lifecycle. An **`InboxPoller`** —
-one long-lived poller per pool, ticking every ~200 ms — is the sole
-between-turn driver. Each tick it enumerates sessions with pending inbox input
-and starts a drain task for each idle one. **Single-flight** is enforced
-structurally: an `inflight` table maps `session_id` to the running `asyncio.Task`,
-set synchronously before scheduling and popped in a `finally` block. A session
+one long-lived poller per pool — is the sole between-turn driver. It is
+**event-driven**: every inbox writer (user input, agent-to-agent sends, the
+`modexctl send` CLI, external peer replies) converges on the pool's
+`AgentMessageBus.send`, which signals a pool-level wakeup `Event`, so a pending
+message is picked up within milliseconds. A ~200 ms tick remains as a
+defensive fallback for writers that bypass the bus. On each pass the poller
+enumerates sessions with pending inbox input and starts a drain task for each
+idle one. **Single-flight** is enforced structurally: an `inflight` table maps
+`session_id` to the running `asyncio.Task`, set synchronously before scheduling
+and popped in a `finally` block (which also re-signals the wakeup, so a message
+that arrived mid-turn is scanned immediately when the turn ends). A session
 that already has a live task is skipped; mid-turn arrivals are handled by
 fold-in (below). Because agents are persistent, a conversation picks up where
 it left off rather than cold-starting every turn.
@@ -26,23 +32,35 @@ it left off rather than cold-starting every turn.
 Each pool is a strict star. One **main agent** is the hub; **subagents** are
 spokes.
 
-Agents communicate through a single tool: `send_to_agent`. The framework
-decides internally how to deliver — broker delivery, the async inbox, or waking
-an isolated subagent session. The sender never chooses a transport.
+The main agent's single outward communication tool is **`task`**. One tool
+covers all three cases: dispatching a new subagent task (omit
+`invocation_id`), continuing an existing subagent session (pass the
+`invocation_id` returned by the earlier dispatch), and messaging a peer pool's
+main agent. The framework decides internally how to deliver — broker delivery,
+the async inbox, or waking an isolated subagent session. The sender never
+chooses a transport.
+
+Subagents get a different, deliberately narrower tool: **`send_to_agent`**
+reaches only the parent that assigned the task, and is for *consultation* —
+asking a clarifying question or requesting a decision mid-task. A subagent's
+deliverable is its final reply text, which is forwarded to the parent
+automatically (see the guaranteed-reply safeguard below), not anything sent
+through a tool.
 
 !!! warning "The topology gate"
     Subagents may only talk to their parent. Subagent-to-subagent and
-    subagent-to-non-parent sends are rejected by the topology gate, enforced at
-    registration. All coordination flows through the main agent, which keeps the
-    communication graph readable and auditable.
+    subagent-to-non-parent sends are rejected by the topology gate, enforced
+    both at registration and again at send time. All coordination flows through
+    the main agent, which keeps the communication graph readable and auditable.
 
 Two safeguards keep the star healthy:
 
 - **Isolation.** Each subagent gets its own Memory, ToolManager, and
   SkillManager, with a restricted, session-only memory window.
-- **Safety net.** If the LLM forgets to call a communication tool, the
-  `SubagentAutoSendHook` auto-forwards the subagent's final output to its
-  parent.
+- **Guaranteed reply.** `SubagentAutoSendHook` fires at the end of every
+  subagent turn and forwards the subagent's final output to its parent over the
+  same bus — the sole result path, so a result arrives even though the
+  subagent's `send_to_agent` is never used for reporting.
 
 ### Fold-in and materialize
 
@@ -51,9 +69,10 @@ Two mechanisms keep the star responsive without spawning unnecessary turns:
 - **Fold-in** is the mid-turn consumption path. A turn already running drains
   its own inbox on each iteration (`InboxFlushHook.before_iteration`) and
   injects new inter-agent messages into the current turn's history as
-  `role=AGENT`. It consumes only `task_request`, `subagent_result`, and
-  `agent_message` types — **not** `external_input`, so a human DM always starts
-  a fresh turn.
+  `role=SYSTEM_REMINDER` records — a uniform system-reminder wrapping of a
+  markdown body that names the sender (`Message from agent / peer agent /
+  subagent '<name>':`). It consumes only fold-eligible inter-agent types —
+  **not** `external_input`, so a human DM always starts a fresh turn.
 - **Materialize** builds a subagent's instance lazily, on the first turn of its
   session, rather than when a message is sent to it. `send` mints the session
   id and enqueues; the poller builds the instance from its template on that
@@ -62,8 +81,12 @@ Two mechanisms keep the star responsive without spawning unnecessary turns:
 ## Peer messaging across pools
 
 Stars don't connect through their spokes. Instead, **main agents communicate as
-peers**: a main agent can `send_to_agent` another pool's main agent, which
-receives the message on its own bus and replies in kind. Pools stay autonomous,
+peers**: a main agent can `task` another pool's main agent, which receives the
+message on its own bus and replies in kind. Peer sends carry an explicit reply
+contract — the message tells the receiver exactly how to answer (the `task`
+tool for a native agent, the `modexctl send` CLI shim for an external one) —
+because, unlike subagents, peer agents get no automatic result forwarding: a
+reply only happens if the receiver chooses to send one. Pools stay autonomous,
 yet a system of pools can still divide labor.
 
 ### Communication Target Store
@@ -78,6 +101,7 @@ Each entry describes one reachable agent:
 | `kind` | `AgentCommKind` — `NORMAL` or `SUBAGENT` |
 | `pool_name` | Owning pool (local pool or a configured peer) |
 | `bus_ref` | Optional direct reference to the target pool's `AgentMessageBus`; `None` means local |
+| `execution_strategy` | How the target runs (`react`, `external`, …) — lets the sender's ack and the receiver's reply contract reflect an external CLI target |
 | `description` | Human-readable |
 
 When `bus_ref` is set, a `PeerNormalStrategy` delivers directly to the peer
@@ -112,57 +136,52 @@ flowchart LR
         direction LR
         MD["default<br/><small>main agent</small>"]
         OE["office-expert<br/><small>subagent</small>"]
-        MD ---|send_to_agent| OE
+        MD ---|task| OE
     end
     subgraph PC["coder pool — react"]
         direction LR
         MO["orchestrator<br/><small>main agent</small>"]
-        PL["planner"]
-        WK["worker<br/><small>(external_coding)</small>"]
-        RV["reviewer"]
-        SC["scout"]
-        OR["oracle"]
-        MO ---|send_to_agent| PL
-        MO ---|send_to_agent| WK
-        MO ---|send_to_agent| RV
-        MO ---|send_to_agent| SC
-        MO ---|send_to_agent| OR
+        CD["coder<br/><small>subagent (external)</small>"]
+        EX["explore<br/><small>subagent</small>"]
+        MO ---|task| CD
+        MO ---|task| EX
     end
-    subgraph PE["opencode pool — external_coding"]
+    subgraph PE["opencode pool — external"]
         direction LR
         MOC["opencode<br/><small>main agent (CLI)</small>"]
     end
 
     MD <-->|peer| MO
     MD <-->|peer| MOC
-    MO <-->|peer| MOC
 ```
 
 | Pool | Main agent | Shape | Subagents | Notable |
 |------|-----------|-------|-----------|---------|
-| `default` | `default` | react | `office-expert` (Office docs via OfficeCLI) | General-purpose assistant; approval enabled |
-| `coder` | `orchestrator` | react | `planner`, `worker`, `reviewer`, `scout`, `oracle` | 5-step decision tree; `worker` is an external coding subagent (OpenCode CLI) |
-| `opencode` | `opencode` | external_coding | — | Autonomous coding peer; no graph runtime |
+| `default` | `default` | react | `office-expert` (Office docs via OfficeCLI) | General-purpose assistant; approval enabled; peer hub of the shipped layout |
+| `coder` | `orchestrator` | react | `coder`, `explore` | Investigation/planning coordinator; `coder` is an external coding subagent (OpenCode CLI), `explore` is read-only |
+| `opencode` | `opencode` | external | — | Autonomous coding peer; no graph runtime |
 
 Inside each react pool the topology is a strict star: one main agent as hub,
-subagents as spokes, all routed through the single `send_to_agent` tool. Across
-pools, main agents talk as peers — including the main agent of the `opencode`
-pool, which has no subagents and no graph runtime of its own.
+subagents as spokes, all coordinated through the single `task` tool. Across
+pools, main agents talk as peers — the shipped wiring peers `default` with both
+`coder` and `opencode`, including the `opencode` main agent, which has no
+subagents and no graph runtime of its own.
 
-!!! note "coder's worker is an external coding subagent"
-    The `coder` pool mixes native and external subagents. `worker` uses
-    `execution_strategy: external_coding` (OpenCode CLI) — the bot delegates
-    implementation tasks to an external CLI agent that runs its own tools and
-    session. See [External Coding Agents](external-coding-agents.md) for how
-    this works and how it talks back.
+!!! note "The coder pool mixes native and external subagents"
+    Its `coder` subagent uses `execution_strategy: external` (OpenCode CLI) —
+    the orchestrator delegates implementation tasks to an external CLI agent
+    that runs its own tools and session, while `explore` stays a native,
+    read-only ReAct subagent. See [External Coding
+    Agents](external-coding-agents.md) for how this works and how it talks
+    back.
 
 ## External coding agents as peers
 
-External coding agents such as **Pi** and **OpenCode** join the same peer
+External coding agents such as **OpenCode** join the same peer
 topology as NORMAL main agents of their own dedicated pools. They don't have
-the `send_to_agent` tool, so they reply through a CLI shim the framework ships
+the `task` tool, so they reply through a CLI shim the framework ships
 for this purpose: `modexctl send`. Every other agent reaches them with the
-standard `send_to_agent`, so from the framework's point of view they are
+standard `task` tool, so from the framework's point of view they are
 ordinary pool mains — same peer wire, different interior. See
 [External Coding Agents](external-coding-agents.md) for the contrast with
 native ReAct pools, how to register one, and what the integration does and
@@ -178,7 +197,7 @@ channel never touches the agents themselves.
 
 - ReAct subagents in a pool run the [Graph Engine](graph-engine.md) runtime, so
   they can suspend for approval too. External coding agent main agents
-  (Pi / OpenCode) run their own CLI harness and do not use the graph.
+  (OpenCode) run their own CLI harness and do not use the graph.
 - What each agent remembers is governed by the [Memory](memory.md) tiers.
 - Set up your first bot in [Installation](../../installation.md) or
   [Get Started](../../get-started.md).

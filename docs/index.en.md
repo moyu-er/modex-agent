@@ -63,10 +63,10 @@ home:
         desc: "Sensitive tool calls pause for a human go-ahead. Tiered policies, cascade cancel, off by default."
       - icon: hub
         title: "Multi-Agent Collaboration"
-        desc: "Strict star topology per pool, peer messaging across pools. One send_to_agent tool — the framework routes."
+        desc: "Strict star topology per pool, peer messaging across pools. One task tool — dispatch, continuation and routing included."
       - icon: layers
         title: "Multi-tier Memory"
-        desc: "Session, Archive, Core Memory and Experience layers. The Dream Engine consolidates archives into Core Memory."
+        desc: "Always-on session compaction, with opt-in Archive and Core Memory per pool. The Dream Engine consolidates; Experience distills reusable knowledge."
       - icon: term
         title: "Cross-platform Terminal"
         desc: "WinPTY, ConPTY, pexpect and tmux behind one interface. Visible and headless PTY modes."
@@ -93,24 +93,24 @@ home:
           - { label: "MessageBroker" }
       - chips:
           - { label: "AgentPool" }
-          - { label: "SubagentManager" }
+          - { label: "AgentMessageBus" }
           - { label: "InboxMQ" }
 
   # ---- Get Started teaser (installer-first) ------------------------------
   getstarted:
     tag: "Get Started"
     title: "Running in three minutes"
-    desc: "ModexBot ships as an installer package — no Python toolchain required."
+    desc: "ModexBot ships as a Windows installer package — no Python toolchain required."
     steps:
       - num: "01"
         title: "Download"
-        desc: "Grab the latest ModexBot installer package from GitHub Releases."
+        desc: "Grab the latest ModexBot-Setup installer from GitHub Releases."
       - num: "02"
         title: "Run the installer"
-        desc: "One idempotent script bootstraps the runtime, config and adapters — safe to re-run."
+        desc: "It bundles the Python runtime, all dependencies and the WebUI frontend — nothing else to install."
       - num: "03"
-        title: "Launch the WebUI"
-        desc: "Start ModexBot and open the browser console. QQ and Telegram adapters ship out of the box."
+        title: "Start chatting"
+        desc: "The WebUI opens on launch. Add your model API key in Settings — QQ and Telegram adapters ship out of the box."
     cta: "Full installation guide"
     cta_aria: "Open the Installation page"
 
@@ -125,6 +125,8 @@ home:
       - "gateway"
       - "skills"
       - "terminal"
+      - "ast"
+      - "observability"
       - "all"
 
   # ---- Final CTA band ------------------------------------------------------

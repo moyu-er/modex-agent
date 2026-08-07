@@ -14,10 +14,10 @@ This guide takes you from a fresh install to your first conversation with ModexB
 
 Start the bot:
 
-- **Windows (installer):** double-click the "ModexBot" desktop shortcut or Start Menu entry.
-- **Any platform (terminal):** run `modexbot start`.
+- **Windows (installer):** double-click the "ModexBot" desktop shortcut or Start Menu entry. The bot starts and the WebUI opens in a dedicated desktop window, with a system-tray icon for quick show/hide. Prefer a plain browser? Use the Start Menu "ModexBot (Browser)" entry instead.
+- **Any platform (terminal):** run `modexbot start`, then open [http://localhost:21800/webui/](http://localhost:21800/webui/) in your browser.
 
-Then open [http://localhost:21800/webui/](http://localhost:21800/webui/) in your browser. The Windows installer opens the WebUI automatically on first launch.
+The desktop window shows the WebUI directly — there is nothing else to open. From the browser, use the URL above.
 
 ## Add your model API key
 
@@ -36,10 +36,10 @@ Prefer the terminal? `modexbot model` (or `modexbot config`) runs an interactive
 - **TodoPanel.** When the agent breaks work into steps, a side panel tracks the live task list so you can follow progress without prompting.
 - **Per-turn model selector.** Pick the provider and model in the chat composer before each message. Models are defined once and shared across pools.
 - **Pool selector.** A dropdown in the sidebar picks the active pool for a new conversation — `default`, `coder`, or `opencode` ship out of the box. Each conversation is pinned to its pool.
-- **Workspace browser.** A modal directory browser lets you switch between live workspaces (`/cd`) without leaving the UI. Switching mutates only a per-session pointer — no `os.chdir`, no restart.
-- **In-browser config editor.** Edit pools, models, MCP servers, skills, and system prompts from Settings. No YAML hand-editing.
+- **Workspace browser.** A modal directory browser lets you switch between live workspaces without leaving the UI (`/cd` does the same in IM chats). Switching mutates only a per-session pointer — no `os.chdir`, no restart.
+- **In-browser config editor.** Edit pools, models, MCP servers, skills, IM credentials, and system prompts from Settings. No YAML hand-editing.
 - **Session tree.** Conversations are fully isolated, with parent/child branches per session, and past sessions reload from history.
-- **Attachments.** Upload files in the composer; the agent can read them, and you can download results back.
+- **Attachments.** Upload files in the composer; the agent can read them, and you can download results back. Uploads are safety-gated by type, content sniffing, and size — images up to 20 MB and other files up to 10 MB by default.
 - **Light and dark themes.** Toggle from the sidebar.
 
 ## Your first conversation
@@ -50,7 +50,7 @@ Type a message in the composer and press send. A good first prompt:
 Introduce yourself and tell me what you can do.
 ```
 
-From there, try something that uses tools, for example asking the bot to look at a file in your workspace or run a small command. If tool approval is enabled for the agent, it will pause before risky changes and ask for your go-ahead; approve with one click in the WebUI or reply `/approve` in chat.
+From there, try something that uses tools, for example asking the bot to look at a file in your workspace or run a small command. Tool approval is opt-in per pool — off unless enabled in Settings → Pools or the pool config — and the bundled `default` and `coder` pools ship with it enabled for writes outside the project. When approval is on, the agent pauses before risky changes and asks for your go-ahead; approve with one click in the WebUI or reply `/approve` (or `/deny`) in chat.
 
 ## What to explore next
 

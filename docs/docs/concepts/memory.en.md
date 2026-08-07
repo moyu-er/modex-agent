@@ -16,32 +16,31 @@ competence.
 | Session | The active conversation's working memory. |
 | Archive | Long-term storage for history that has left the session window. |
 | Core Memory | Durable, distilled knowledge the agent manages in-context — `SOUL.md` (agent identity), `USER.md` (user profile), `MEMORY.md` (distilled facts). |
-| UserRetentionBuffer | Retains user-scoped memory beyond a single session. |
 | Pruned | A catalog of messages removed by cleanup, so the model still knows what was taken out. |
 | Experience | Reusable lessons written as `EXPERIENCE.md` reference files. |
 
 !!! note "Core Memory, not Knowledge"
-    This tier was renamed from "Knowledge" to **Core Memory** per
-    [ADR-0035](https://github.com/moyu-er/ModexAgent/blob/main/docs/adr/0035-core-memory-and-knowledge-base-terminology-split.md)
-    to disambiguate it from the forthcoming **KnowledgeBase** (RAG) module. The
-    XML tag values (`<your_identity>`, `<user_profile>`, `<known_facts>`) and the
-    file names (`SOUL.md` / `USER.md` / `MEMORY.md`) are **not** renamed — they
-    are agent-facing prompt artifacts and user workspace data.
+    This tier was renamed from "Knowledge" to **Core Memory** to keep it
+    distinct from retrieval-style knowledge bases. The XML tag values
+    (`<your_identity>`, `<user_profile>`, `<known_facts>`) and the file names
+    (`SOUL.md` / `USER.md` / `MEMORY.md`) are **not** renamed — they are
+    agent-facing prompt artifacts and user workspace data.
 
 ### Core Memory vs. KnowledgeBase
 
 These two concepts are easy to conflate. They are distinct:
 
-| | Core Memory | KnowledgeBase *(forthcoming)* |
+| | Core Memory | KnowledgeBase |
 |---|---|---|
 | What | Agent identity, user profile, distilled facts | Retrievable domain knowledge (RAG corpus, FAQ, reference data) |
 | Where | In-context — always injected into the system prompt | Out-of-context — retrieved on demand via search / tool / injection |
 | Managed by | The agent itself, through scoped file tools | Typically shared across agents or scoped to a pool / workspace |
 | Aligned with | Letta's "Core Memory" (`persona` + `human` blocks) | LangChain / LlamaIndex / mem0's RAG-vs-Memory distinction |
 
-The KnowledgeBase ABC is designed by a forthcoming ADR-0036. Its framework
-contract will be minimal — only `search()` is mandatory; CRUD and maintenance
-are optional mixins or business-layer concerns.
+The framework deliberately does **not** ship a KnowledgeBase abstraction:
+retrieval over domain knowledge is an application-layer concern, not a memory
+tier. Core Memory is the in-context half of the distinction, and it is the
+half ModexAgent owns.
 
 ### Pruned: no silent holes
 
@@ -57,6 +56,24 @@ The `ExperienceReviewAgent`, itself a ReAct agent, reviews conversations and
 creates or updates `EXPERIENCE.md` files, turning one-off interactions into
 reference knowledge the agent can consult on later tasks. The experience layer
 is injected as `<available_experiences>` XML.
+
+## Long-term memory is opt-in
+
+Session memory, compaction, and the pruned catalog are always on. The two
+long-term layers — Archive and Core Memory — ship **off by default**, because
+they are the layers that accumulate without bound. Enabling them is a per-pool
+decision, toggled in `pool.yml`:
+
+```yaml
+memory:
+  archive_enabled: true
+  core_enabled: true
+```
+
+`core_enabled` requires `archive_enabled` — Core Memory is fed by archive
+consolidation, so enabling it without the archive is a configuration error.
+The same toggles are editable in the WebUI Pool Editor and persisted back to
+`pool.yml`. The Dream Engine (below) runs only when both layers are on.
 
 ## Scopes: who a memory belongs to
 
@@ -101,6 +118,14 @@ corrupts memory.
     a model call; its output is never written back to the session. Governance is
     a lens on memory, not an editor of it.
 
+Compression runs as a hook-driven cleanup pipeline. When a session crosses its
+token threshold, cleanup picks a tool-chain-safe prune boundary, generates a
+structured compact summary, commits `[compact_summary]` plus the kept tail
+back to the session, writes the pruned catalog, and — only when the archive
+layer is enabled — generates archive documents. `CLEANUP_TRIGGERED` and
+`CLEANUP_FINISHED` hooks fire around this pipeline; the bot uses them, for
+example, to re-orient the agent's todo list after a prune.
+
 One structural invariant applies everywhere: tool-call chains must stay legal.
 An `assistant` message with `tool_calls` must never be separated from its
 matching `tool` results, or the model API will reject the context. Compression
@@ -110,8 +135,10 @@ evicted (archived), never partially kept.
 ## The Dream Engine: closing the self-learning loop
 
 Over time, archives pile up. The **Dream Engine** consolidates archived history
-into Core Memory, so what the agent has done becomes what the agent knows.
-Together with the `ExperienceReviewAgent`, it closes the self-learning loop:
+into Core Memory, so what the agent has done becomes what the agent knows. It
+is the only path from archive to Core Memory — nothing else writes
+consolidation results. Together with the `ExperienceReviewAgent`, it closes
+the self-learning loop:
 
 ```mermaid
 flowchart LR
@@ -129,8 +156,9 @@ Experience — all three flow back into the LLM context on every turn.
 
 Subagents run leaner. `archive=None` is the standard session-only mode: a
 subagent's session memory is temporary and cleared when the subagent finishes,
-and its injection policy is restricted to a narrow context window. Long-term
-remembering is the main agent's job.
+and its injection policy is restricted to a narrow context window. Subagents
+do not carry the `memory` toggle — they are session-only by construction.
+Long-term remembering is the main agent's job.
 
 ## Where to next
 

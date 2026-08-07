@@ -5,22 +5,25 @@ description: Install ModexBot on Windows with the installer, or run from source 
 
 # Installation
 
-This page covers installing **ModexBot**, the reference bot application built on the ModexAgent framework, with the browser WebUI included.
+This page covers installing **ModexBot**, the reference bot application built on the ModexAgent framework, with its WebUI included.
 
 !!! warning "Important: what v1 distributes"
     Version 1 distributes the **ModexBot application** only. The **ModexAgent framework itself is not yet published as a standalone installable package** (no PyPI release). If you want the framework for your own project, clone the [source repository](https://github.com/moyu-er/ModexAgent) and work from `src/modex_agent/` directly.
 
 ## Windows: Installer (recommended)
 
-The installer bundles everything: Python runtime, all dependencies, and the WebUI frontend. No prerequisites, and no internet connection is needed during installation.
+The installer bundles everything: Python runtime, all dependencies, the WebUI frontend, and a desktop shell. No prerequisites, and no internet connection is needed during installation.
 
-1. **Download.** Go to [Releases](https://github.com/moyu-er/ModexAgent/releases/latest) and download `ModexBot-Setup-x.x.x.exe`.
-2. **Install.** Double-click the downloaded `.exe` and follow the wizard. No admin rights needed.
-3. **Launch.** Double-click the "ModexBot" desktop shortcut, or find it in the Start Menu.
+1. **Download.** Go to [Releases](https://github.com/moyu-er/ModexAgent/releases/latest) and download `ModexBot-Setup-1.0.0-dev.exe` (~100 MB).
+2. **Install.** Double-click the downloaded `.exe` and follow the wizard. It installs to `%LOCALAPPDATA%\Programs\ModexBot\` — no admin rights needed.
+3. **Launch.** Double-click the "ModexBot" desktop shortcut, or find it in the Start Menu. The bot starts and the WebUI opens in a dedicated desktop window — with a system-tray icon and background health monitoring — rather than a plain browser tab. Prefer the browser? Use the Start Menu "ModexBot (Browser)" entry instead.
 4. **Configure.** On first launch the WebUI opens automatically. Open **Settings** and enter your model API key (DeepSeek, OpenAI, and more are supported).
 
-!!! note "No release yet?"
-    If the Releases page has no installer published yet, use the from-source path below. The installer lands with the first release.
+!!! note "Development release"
+    `v1.0.0-dev` is the first development release. It is fully usable, but APIs, configuration layout, and packaging may still change before the stable 1.0.0.
+
+!!! tip "Browser-only build"
+    The desktop window is a Tauri shell bundled by default. If you build your own installer from source, `build.bat --skip-tauri` produces a browser-only variant without it.
 
 ## macOS / Linux / Developers: From source
 
@@ -59,6 +62,7 @@ After installation, `modexbot` is available from any terminal:
 | `modexbot start` | Start the bot |
 | `modexbot stop` | Stop the bot |
 | `modexbot restart` | Restart the bot |
+| `modexbot status` | Show running status (PID, port, uptime, memory) |
 | `modexbot install` | Build or rebuild the WebUI frontend (`-f` to force) |
 | `modexbot logs -f` | Follow live logs |
 | `modexbot config` | Run the config wizard |
@@ -87,7 +91,7 @@ troubleshooting.
 
 ## Uninstall
 
-On Windows, uninstall via **Add/Remove Programs**. Your config files (API keys, and so on) are preserved, so reinstalling picks up where you left off.
+On Windows, uninstall via **Add/Remove Programs**. Config files that hold secrets (`.env`, `config/model.yml`, `config/im.yml`) are preserved, so reinstalling picks up where you left off.
 
 ## Next steps
 
